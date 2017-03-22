@@ -15,7 +15,7 @@ import android.widget.ProgressBar;
 
 public class MyHeadView extends FrameLayout implements IHeadView {
     private static final String TAG = "MyHeadView";
-    private View content;
+    private ViewGroup content;
     private ProgressBar progressBar;
 
     public MyHeadView(Context context) {
@@ -32,7 +32,16 @@ public class MyHeadView extends FrameLayout implements IHeadView {
     }
 
     private void initParams(Context context) {
-        content = View.inflate(context, R.layout.head_layout, null);
+        content = (ViewGroup) View.inflate(context, R.layout.head_layout, null);
+        addView(content);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(200, MeasureSpec.EXACTLY);
+        content.measure(widthMeasureSpec, childHeightMeasureSpec);
+
+        setMeasuredDimension(content.getMeasuredWidth(), content.getMeasuredHeight());
     }
 
     @Override

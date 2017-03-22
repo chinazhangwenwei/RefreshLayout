@@ -5,6 +5,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ScrollerCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -91,6 +92,9 @@ public class RefreshLayout extends FrameLayout {
                     layoutParams.topMargin + layoutParams.bottomMargin + paddingTop + paddingBottom,
                     layoutParams.height);
             childView.measure(childWidthMeasure, childHeightMeasure);
+            if (i == 0) {
+                Log.d(TAG, "onMeasure第一个: " + childView.getMeasuredHeight());
+            }
             measureHeight += childView.getMeasuredHeight() + layoutParams.topMargin + layoutParams.bottomMargin;
         }
         setMeasuredDimension(width, measureHeight);
@@ -124,21 +128,25 @@ public class RefreshLayout extends FrameLayout {
 
     }
 
+    private MotionEvent motionEvent;
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        SwipeRefreshLayout refreshLayout;
         int action = ev.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                Log.d(TAG, "dispatchTouchEvent: ACTION_DOWN");
                 pressX = (int) ev.getRawX();
                 pressY = (int) ev.getRawY();
                 tempPressY = pressY;
+                motionEvent = ev;
 
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (!isEnabled()) {
                     return super.dispatchTouchEvent(ev);
                 }
+                Log.d(TAG, "dispatchTouchEvent: ACTION_MOVE");
                 int currentX = (int) ev.getRawX();
                 int currentY = (int) ev.getRawY();
                 int distanceY = currentY - pressY;
@@ -153,19 +161,20 @@ public class RefreshLayout extends FrameLayout {
                 }
                 if (isRefresh) {
                     sendCancelTouchEvent();
-                    return  true;
+                    return true;
                 }
 
                 if (distanceY > 0 && refreshDistanceHolder.mOffsetY <= headMaxDistance || distanceY < 0) {
                     distanceY = (int) (distanceY / 1.5f);
+                    Log.d(TAG, "dispatchTouchEvent: ACTION_MOVE" + distanceY);
                 } else {
                     return super.dispatchTouchEvent(ev);
                 }
                 //
-                if (canChildScrollUp()) {
-                    return super.dispatchTouchEvent(ev);
+                if (!canChildScrollUp() && distanceY > 0 || (distanceY < 0 && refreshDistanceHolder.hasHeaderPullDown())) {
+                    moveDistanceY(distanceY);
                 } else {
-
+                    return super.dispatchTouchEvent(ev);
                 }
 
                 break;
@@ -173,13 +182,59 @@ public class RefreshLayout extends FrameLayout {
 
             case MotionEvent.ACTION_UP:
                 isSlop = false;
+                if (!isRefresh && refreshDistanceHolder.mOffsetY >= iHeadView.getHeadViewHeight()) {
+                    isRefresh = true;
+                    setRefreshState();
+                } else {
+
+                }
 
                 break;
         }
         return super.dispatchTouchEvent(ev);
     }
 
-    private void sendCancelTouchEvent(){
+    @Override
+    public void computeScroll() {
+        if (scrollerCompat.computeScrollOffset()) {
+            int lastY = refreshDistanceHolder.mOffsetY;
+            int dy = lastY - scrollerCompat.getCurrY();
+            moveDistanceY(dy);
+        }
+//        super.computeScroll();
+    }
+
+    private void setRefreshState() {
+        if (refreshDistanceHolder.mOffsetY >= iHeadView.getHeadViewHeight()) {
+            scrollerCompat.startScroll(0, refreshDistanceHolder.mOffsetY, 0, iHeadView.getHeadViewHeight());
+            iHeadView.refreshing();
+        } else {
+            scrollerCompat.startScroll(0, refreshDistanceHolder.mOffsetY, 0, 0);
+        }
+//        scrollerCompat.startScroll(0,);
+//        mHeadView.offsetTopAndBottom(iHeadView.getHeadViewHeight() - refreshDistanceHolder.mOffsetY);
+//        contentView.offsetTopAndBottom(iHeadView.getHeadViewHeight() - refreshDistanceHolder.mOffsetY);
+//        refreshDistanceHolder.mOffsetY = iHeadView.getHeadViewHeight();
+//        iHeadView.refreshing();
+    }
+
+    private void sendCancelTouchEvent() {
+        if (motionEvent != null) {
+            motionEvent.setAction(MotionEvent.ACTION_CANCEL);
+            super.dispatchTouchEvent(motionEvent);
+            motionEvent = null;
+        }
+    }
+
+    private static final String TAG = "RefreshLayout";
+
+    private void moveDistanceY(int distanceY) {
+        Log.d(TAG, "moveDistanceY: " + distanceY);
+        refreshDistanceHolder.move(distanceY);
+        mHeadView.offsetTopAndBottom(distanceY);
+        contentView.offsetTopAndBottom(distanceY);
+        ViewCompat.postInvalidateOnAnimation(this);
+
 
     }
 
