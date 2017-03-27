@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
+import android.widget.ScrollView;
 
 /**
  * Created by admin on 2017/3/20.
@@ -36,7 +37,7 @@ public class RefreshLayout extends FrameLayout {
     private ScrollerCompat scrollerCompat;
     private int touchSlop;
     private boolean isSlop;
-
+    private ScrollView scrollView;
     //
     private boolean isRefresh = false;
 
@@ -136,8 +137,9 @@ public class RefreshLayout extends FrameLayout {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 Log.d(TAG, "dispatchTouchEvent: ACTION_DOWN");
-                pressX = (int) ev.getRawX();
-                pressY = (int) ev.getRawY();
+                isCancelTouch = true;
+                pressX = (int) ev.getX();
+                pressY = (int) ev.getY();
                 tempPressY = pressY;
                 motionEvent = ev;
 
@@ -147,8 +149,8 @@ public class RefreshLayout extends FrameLayout {
                     return super.dispatchTouchEvent(ev);
                 }
                 Log.d(TAG, "dispatchTouchEvent: ACTION_MOVE");
-                int currentX = (int) ev.getRawX();
-                int currentY = (int) ev.getRawY();
+                int currentX = (int) ev.getX();
+                int currentY = (int) ev.getY();
                 int distanceY = currentY - pressY;
                 pressY = currentY;
                 pressX = currentX;
@@ -159,23 +161,27 @@ public class RefreshLayout extends FrameLayout {
                         return super.dispatchTouchEvent(ev);
                     }
                 }
-                if (isRefresh) {
-                    sendCancelTouchEvent();
-                    return true;
-                }
+//                if (isRefresh) {
+//                    sendCancelTouchEvent();
+//                    return true;
+//                }
 
-                if (distanceY > 0 && refreshDistanceHolder.mOffsetY <= headMaxDistance || distanceY < 0) {
+                if ((distanceY > 0 && refreshDistanceHolder.mOffsetY <= headMaxDistance) || distanceY < 0) {
                     distanceY = (int) (distanceY / 1.5f);
                     Log.d(TAG, "dispatchTouchEvent: ACTION_MOVE" + distanceY);
                 } else {
                     return super.dispatchTouchEvent(ev);
                 }
                 //
-                if (!canChildScrollUp() && distanceY > 0 || (distanceY < 0 && refreshDistanceHolder.hasHeaderPullDown())) {
+                if ((!canChildScrollUp() && distanceY > 0) || (distanceY < 0 && refreshDistanceHolder.hasHeaderPullDown())) {
+                    sendCancelTouchEvent();
                     moveDistanceY(distanceY);
                 } else {
                     return super.dispatchTouchEvent(ev);
                 }
+                if (Math.abs(distanceY) > 0)
+                    Log.d(TAG, "sendDownEvent___________________________");
+                sendDownEvent();
 
                 break;
             case MotionEvent.ACTION_CANCEL:
@@ -192,6 +198,27 @@ public class RefreshLayout extends FrameLayout {
                 break;
         }
         return super.dispatchTouchEvent(ev);
+    }
+
+    private boolean isSendDown = false;
+
+    private void sendDownEvent() {
+//        if (!mHasSendDownEvent) {
+//            LogUtils.d("sendDownEvent");
+//            mHasSendCancelEvent = false;
+//            mHasSendDownEvent = true;
+        if (isSendDown) {
+            isSlop = false;
+            final MotionEvent last = motionEvent;
+            if (last == null)
+                return;
+
+            MotionEvent e = MotionEvent.obtain(last.getDownTime(),
+                    last.getEventTime(), MotionEvent.ACTION_DOWN, last.getX(),
+                    last.getY(), last.getMetaState());
+            super.dispatchTouchEvent(e);
+        }
+//        }
     }
 
     @Override
@@ -218,11 +245,21 @@ public class RefreshLayout extends FrameLayout {
 //        iHeadView.refreshing();
     }
 
+    private boolean isCancelTouch = false;
+
     private void sendCancelTouchEvent() {
         if (motionEvent != null) {
-            motionEvent.setAction(MotionEvent.ACTION_CANCEL);
-            super.dispatchTouchEvent(motionEvent);
-            motionEvent = null;
+            if (isCancelTouch) {
+                isCancelTouch = false;
+                MotionEvent e = MotionEvent.obtain(
+                        motionEvent.getDownTime(),
+                        motionEvent.getEventTime()
+                                + ViewConfiguration.getLongPressTimeout(),
+                        MotionEvent.ACTION_CANCEL, motionEvent.getX(), motionEvent.getY(),
+                        motionEvent.getMetaState());
+//            motionEvent.setAction(MotionEvent.ACTION_CANCEL);
+                super.dispatchTouchEvent(e);
+            }
         }
     }
 
