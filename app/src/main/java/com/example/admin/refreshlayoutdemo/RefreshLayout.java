@@ -142,7 +142,7 @@ public class RefreshLayout extends FrameLayout {
                 pressY = (int) ev.getY();
                 tempPressY = pressY;
                 motionEvent = ev;
-
+//                super.dispatchTouchEvent(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (!isEnabled()) {
@@ -168,14 +168,20 @@ public class RefreshLayout extends FrameLayout {
 
                 if ((distanceY > 0 && refreshDistanceHolder.mOffsetY <= headMaxDistance) || distanceY < 0) {
                     distanceY = (int) (distanceY / 1.5f);
+
                     Log.d(TAG, "dispatchTouchEvent: ACTION_MOVE" + distanceY);
                 } else {
                     return super.dispatchTouchEvent(ev);
                 }
                 //
                 if ((!canChildScrollUp() && distanceY > 0) || (distanceY < 0 && refreshDistanceHolder.hasHeaderPullDown())) {
-                    sendCancelTouchEvent();
-                    moveDistanceY(distanceY);
+
+                    if (Math.abs(distanceY) > 100) {
+
+                    } else {
+                        sendCancelTouchEvent();
+                        moveDistanceY(distanceY);
+                    }
                 } else {
                     return super.dispatchTouchEvent(ev);
                 }
@@ -200,7 +206,7 @@ public class RefreshLayout extends FrameLayout {
         return super.dispatchTouchEvent(ev);
     }
 
-    private boolean isSendDown = false;
+    private boolean isSendDown = true;
 
     private void sendDownEvent() {
 //        if (!mHasSendDownEvent) {
@@ -267,10 +273,14 @@ public class RefreshLayout extends FrameLayout {
 
     private void moveDistanceY(int distanceY) {
         Log.d(TAG, "moveDistanceY: " + distanceY);
-        refreshDistanceHolder.move(distanceY);
-        mHeadView.offsetTopAndBottom(distanceY);
-        contentView.offsetTopAndBottom(distanceY);
-        ViewCompat.postInvalidateOnAnimation(this);
+        if (Math.abs(distanceY) > 100) {
+            Log.d(TAG, "moveDistanceY: 移动距离过大" + distanceY);
+        } else {
+            refreshDistanceHolder.move(distanceY);
+            mHeadView.offsetTopAndBottom(distanceY);
+            contentView.offsetTopAndBottom(distanceY);
+            ViewCompat.postInvalidateOnAnimation(this);
+        }
 
 
     }
