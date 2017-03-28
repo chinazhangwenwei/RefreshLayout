@@ -140,42 +140,49 @@ public class MyPullToZoomListView extends ListView implements AbsListView.OnScro
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-//        int action = ev.getActionMasked();
-//        switch (action) {
-//            case MotionEvent.ACTION_DOWN:
-//                if (animator != null) {
-//                    animator.isRunning();
-//                    animator.end();
-//                }
-//                lastPressX = ev.getX();
-//                lastPressY = ev.getY();
-//                tempInitY = lastPressY;
-//                break;
-//            case MotionEvent.ACTION_MOVE:
-//                final float currentY = ev.getY();
-//                if (Math.abs(currentY - tempInitY) > touchSlop) {
-//                    if (headViewContainer.getBottom() >= headViewHeight) {
-//                        scale = headViewContainer.getBottom() + (currentY - lastPressY) / headViewHeight;
-//                        ViewGroup.LayoutParams localLayoutParams = headViewContainer
-//                                .getLayoutParams();
+        int action = ev.getActionMasked();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                Log.d(TAG, "onTouchEvent: ACTION_DOWN");
+                if (animator != null) {
+                    animator.isRunning();
+                    animator.end();
+                }
+                lastPressX = ev.getX();
+                lastPressY = ev.getY();
+                tempInitY = lastPressY;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                Log.d(TAG, "onTouchEvent: ACTION_MOVE");
+                final float currentY = ev.getY();
+                if (Math.abs(currentY - tempInitY) > touchSlop) {
+                    if (headViewContainer.getBottom() >= headViewHeight) {
+                        scale = (headViewContainer.getBottom() + (currentY - lastPressY)) * 1.0f / headViewHeight;
+                        ViewGroup.LayoutParams localLayoutParams = headViewContainer
+                                .getLayoutParams();
 //                        localLayoutParams.width = (int) (headViewWidth * scale);
-//                        localLayoutParams.height = (int) (headViewHeight * scale);
-//                        headViewContainer.setLayoutParams(localLayoutParams);
-//                    }
-//
-//                }
-//                lastPressY = currentY;
-//
-//            break;
-//            case MotionEvent.ACTION_POINTER_DOWN:
-//                break;
-//            case MotionEvent.ACTION_POINTER_UP:
-//                break;
-//            case MotionEvent.ACTION_UP:
-//            case MotionEvent.ACTION_CANCEL:
-//                endScale();
-//                break;
-//        }
+                        localLayoutParams.height = (int) (headViewHeight * scale);
+                        headViewContainer.setLayoutParams(localLayoutParams);
+                        lastPressY = currentY;
+                        return true;
+                    }
+
+                }
+                lastPressY = currentY;
+
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN");
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                Log.d(TAG, "onTouchEvent: ACTION_POINTER_UP");
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                Log.d(TAG, "onTouchEvent: ACTION_CANCEL");
+                endScale();
+                break;
+        }
         return super.onTouchEvent(ev);
     }
 
@@ -192,7 +199,7 @@ public class MyPullToZoomListView extends ListView implements AbsListView.OnScro
                     float value = (Float) animation.getAnimatedValue();
                     ViewGroup.LayoutParams localLayoutParams = headViewContainer
                             .getLayoutParams();
-                    localLayoutParams.width = (int) (headViewWidth * value);
+//                    localLayoutParams.width = (int) (headViewWidth * value);
                     localLayoutParams.height = (int) (headViewHeight * value);
                     headViewContainer.setLayoutParams(localLayoutParams);
 
