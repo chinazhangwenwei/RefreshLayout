@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <pullzom.MyPullToZoomListView
+    <pullzom.MyZoomListView
         android:cacheColorHint="@android:color/transparent"
         android:listSelector="@android:color/transparent"
         android:id="@+id/listview"
