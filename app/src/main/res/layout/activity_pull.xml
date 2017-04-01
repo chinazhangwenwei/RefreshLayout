@@ -5,13 +5,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <pullzom.MyZoomListView
-        android:cacheColorHint="@android:color/transparent"
-        android:listSelector="@android:color/transparent"
-        android:id="@+id/listview"
+    <pullzom.SkillView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:ration_head_height="9"
-        app:ration_head_width="16" />
+        android:layout_height="200dp"
+        android:padding="@dimen/activity_horizontal_margin" />
 
 </LinearLayout>

@@ -130,6 +130,7 @@ public class RefreshLayout extends FrameLayout {
     }
 
     private MotionEvent motionEvent;
+    private SwipeRefreshLayout;
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
