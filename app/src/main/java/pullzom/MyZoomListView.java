@@ -276,6 +276,7 @@ public class MyZoomListView extends ListView implements AbsListView.OnScrollList
     private ValueAnimator animator;
 
     private void endScale() {
+
         Log.d(TAG, "animator" + scale);
         float tempScale = scale;
         if (tempScale > 1.8) {
